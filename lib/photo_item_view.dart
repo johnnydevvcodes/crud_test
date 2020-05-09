@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crudtest/like.dart';
 import 'package:crudtest/photo.dart';
@@ -49,9 +50,17 @@ class _PhotoItemViewState extends State<PhotoItemView> {
                   child: Container(
                     height: 50,
                     width: 50,
-                    child: FadeInImage.memoryNetwork(
-                      placeholder: kTransparentImage,
-                      image: widget.photo.photoUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: widget.photo.photoUrl,
+                      imageBuilder: (context, imageProvider) => Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.cover),
+                        ),
+                      ),
+                      placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => Icon(Icons.error),
                     ),
                   ),
                 ),

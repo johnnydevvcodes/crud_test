@@ -295,17 +295,22 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                       case ConnectionState.waiting:
                         return new Text('Loading...');
                       default:
+                        var likes = List<Like>();
+                        snapshot.data.documents?.forEach((data) {
+                          if (data['subphoto'] == null) {
+                            var l = data.data;
+                            likes.add(Like.fromMap(l));
+                            print("likes: ${likes}");
+                          }
+                        });
+
                         return CustomScrollView(
                           slivers: <Widget>[
                             SliverList(
                               delegate: SliverChildBuilderDelegate(
                                   (BuildContext context, int index) {
                                 print("index : $index");
-                                var like = snapshot.data.documents
-                                    ?.elementAt(index)
-                                    ?.data;
-                                var likeObj = Like.fromMap(like);
-
+                                var likeObj = likes[index];
                                 return Padding(
                                   padding:
                                       const EdgeInsets.fromLTRB(2, 4, 2, 0),
@@ -317,7 +322,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                                     title: Text(likeObj.email),
                                   ),
                                 );
-                              }, childCount: snapshot.data.documents?.length),
+                              }, childCount: likes?.length),
                             ),
                           ],
                         );
