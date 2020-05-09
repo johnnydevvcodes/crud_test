@@ -9,6 +9,7 @@ import 'package:crudtest/photo.dart';
 import 'package:crudtest/storage_service.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_overlay/loading_overlay.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:uuid/uuid.dart';
@@ -30,6 +31,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
   var storage = serviceLocator.get<StorageService>();
   FirebaseStorage _storageIns;
   var _imageList = List<String>();
+  var _isLoading = false;
 
   bool _isByYou;
 
@@ -42,114 +44,111 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          // Max Size
-//          Container(
-//            decoration: BoxDecoration(
-//              image: DecorationImage(
-//                image: NetworkImage(widget.photo.photoUrl),
-//                fit: BoxFit.fitHeight,
-//              ),
-//            ),
-//          ),
-          StreamBuilder<QuerySnapshot>(
-              stream: Firestore.instance
-                  .document("$KEY_PHOTOS/${widget.photo.docId}")
-                  .collection(widget.photo.uid)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError)
-                  return new Text('Error: ${snapshot.error}');
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return FullscreenSliderDemo(
-                        imgList: [widget.photo.photoUrl]);
-                  default:
-                    _imageList = List<String>();
-                    _imageList.add(widget.photo.photoUrl);
-                    snapshot.data.documents?.forEach((data) {
-                      if (data['subphoto'] != null) {
-                        _imageList.add(data['subphoto']);
-                        print("subphotos: ${data['subphoto']}");
-                      }
-                    });
-                    return FullscreenSliderDemo(imgList: _imageList);
-                }
-              }),
-
-          Positioned(
-            left: 40.0,
-            bottom: 40.0,
-            child: Container(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom),
-              height: 150.0,
-              width: 150.0,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    widget.photo.photoName ?? "Label",
-                    style: TextStyle(fontSize: 24, color: Colors.white),
-                  ),
-                  Text(
-                    "Posted by ${_isByYou ? "You" : (widget.photo.postedBy ?? "unknown")}",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                    child: GestureDetector(
-                      onTap: () {
-                        _showLikes();
-                      },
-                      child: Text(
-                        "${widget.photo.likes ?? 0} likes",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
+      body: LoadingOverlay(
+        isLoading: _isLoading,
+        color: Colors.transparent,
+        child: Stack(
+          children: <Widget>[
+            StreamBuilder<QuerySnapshot>(
+                stream: Firestore.instance
+                    .document("$KEY_PHOTOS/${widget.photo.docId}")
+                    .collection(widget.photo.uid)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    _isLoading = false;
+                    return new Text('Error: ${snapshot.error}');
+                  }
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return FullscreenSliderDemo(
+                          imgList: [widget.photo.photoUrl]);
+                    default:
+                      _imageList = List<String>();
+                      _imageList.add(widget.photo.photoUrl);
+                      snapshot.data.documents?.forEach((data) {
+                        if (data['subphoto'] != null) {
+                          _imageList.add(data['subphoto']);
+                          print("subphotos: ${data['subphoto']}");
+                        }
+                      });
+                      _isLoading = false;
+                      return FullscreenSliderDemo(imgList: _imageList);
+                  }
+                }),
+            Positioned(
+              left: 40.0,
+              bottom: 40.0,
+              child: Container(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                height: 150.0,
+                width: 150.0,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      widget.photo.photoName ?? "Label",
+                      style: TextStyle(fontSize: 24, color: Colors.white),
                     ),
-                  )
-                ],
+                    Text(
+                      "Posted by ${_isByYou ? "You" : (widget.photo.postedBy ?? "unknown")}",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                      child: GestureDetector(
+                        onTap: () {
+                          _showLikes();
+                        },
+                        child: Text(
+                          "${widget.photo.likes ?? 0} likes",
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-          _isByYou
-              ? Positioned(
-                  right: 30.0,
-                  top: 20.0,
-                  child: Row(
-                    children: <Widget>[
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        color: Colors.white,
-                        onPressed: () {
-                          _deleteDialog();
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        color: Colors.white,
-                        onPressed: () {
-                          _bottomSheet();
-                        },
-                      ),
-                    ],
-                  ),
-                )
-              : Container(),
-          Positioned(
-            left: 30.0,
-            top: 20.0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back_ios),
-              color: Colors.white,
-              onPressed: () {
-                _backHome();
-              },
+            _isByYou
+                ? Positioned(
+                    right: 30.0,
+                    top: 20.0,
+                    child: Row(
+                      children: <Widget>[
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          color: Colors.white,
+                          onPressed: () {
+                            _deleteDialog();
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          color: Colors.white,
+                          onPressed: () {
+                            _bottomSheet();
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                : Container(),
+            Positioned(
+              left: 20.0,
+              top: 20.0,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back_ios),
+                color: Colors.white,
+                onPressed: () {
+                  _backHome();
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -195,8 +194,11 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      _backHome();
-                      _updatePhoto();
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      Navigator.of(context).pop();
+                      _updateData();
                     },
                     child: Card(
                       color: Colors.grey,
@@ -231,12 +233,15 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                 child: new Text('Yes'),
                 onPressed: () {
                   //go back to previous page
+                  setState(() {
+                    _isLoading = true;
+                  });
                   Navigator.pop(context);
                   Firestore.instance
                       .document("$KEY_PHOTOS/${widget.photo.docId}")
                       .delete()
                       .then((_) {
-                    _deleteFromStorage().then((_){
+                    _deleteFromStorage().then((_) {
                       _backHome();
                     });
                   });
@@ -258,7 +263,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
     Navigator.of(context).pop();
   }
 
-  void _updatePhoto() {
+  void _updateData() {
     var photo = widget.photo;
     Firestore.instance
         .document("$KEY_PHOTOS/${photo.docId}")
@@ -271,6 +276,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
             .toMap())
         .then((_) {
       _backHome();
+      _isLoading = false;
     });
   }
 
@@ -363,6 +369,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
   }
 
   Future<void> _addPhotos() async {
+    Navigator.of(context).pop(); // dismiss modal
     List<Asset> resultList = List<Asset>();
     String error = 'No Error Dectected';
 
@@ -382,6 +389,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
     if (!mounted) return;
 
     setState(() {
+      _isLoading = true;
       images = resultList;
       images.forEach((image) async {
         print("images: ${image.name}");

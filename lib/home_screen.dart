@@ -6,6 +6,7 @@ import 'package:crudtest/photo_item_view.dart';
 import 'package:crudtest/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:loading_overlay/loading_overlay.dart';
 import 'dart:async';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'constants.dart';
@@ -32,9 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   FirebaseStorage _storageIns;
 
+  var _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(backgroundColor: Colors.grey),
       floatingActionButton: IconButton(
         icon: Icon(
           Icons.add_a_photo,
@@ -44,46 +48,46 @@ class _HomeScreenState extends State<HomeScreen> {
           loadAssets();
         },
       ),
-      appBar: AppBar(
-        title: Text("HomeScreen"),
-      ),
-      body: Container(
-        child:
-        StreamBuilder<QuerySnapshot>(
-            stream: Firestore.instance.collection(KEY_PHOTOS).snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError)
-                return new Text('Error: ${snapshot.error}');
-              switch (snapshot.connectionState) {
-                case ConnectionState.waiting:
-                  return new Text('Loading...');
-                default:
-                  return
-                    CustomScrollView(
-                    slivers: <Widget>[
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                            (BuildContext context, int index) {
-                          print("index : $index");
-
-                          var photo =
-                              snapshot.data.documents?.elementAt(index)?.data;
-                          var photoObj = Photo.fromMap(photo);
-                          photoObj.docId = snapshot.data.documents
-                              ?.elementAt(index)
-                              ?.documentID;
-
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
-                            child: PhotoItemView(
-                                photo: photoObj, user: widget.user),
-                          );
-                        }, childCount: snapshot.data.documents?.length),
-                      ),
-                    ],
-                  );
-              }
-            }),
+      body: LoadingOverlay(
+        isLoading: _isLoading,
+        color: Colors.transparent,
+        child: Container(
+          child: StreamBuilder<QuerySnapshot>(
+              stream: Firestore.instance.collection(KEY_PHOTOS).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  _isLoading = false;
+                  return new Text('Error: ${snapshot.error}');
+                }
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return new Text('Loading...');
+                  default:
+                    return CustomScrollView(
+                      slivers: <Widget>[
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                              (BuildContext context, int index) {
+                            print("index : $index");
+                            var photo =
+                                snapshot.data.documents?.elementAt(index)?.data;
+                            var photoObj = Photo.fromMap(photo);
+                            photoObj.docId = snapshot.data.documents
+                                ?.elementAt(index)
+                                ?.documentID;
+                            _isLoading = false;
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
+                              child: PhotoItemView(
+                                  photo: photoObj, user: widget.user),
+                            );
+                          }, childCount: snapshot.data.documents?.length),
+                        ),
+                      ],
+                    );
+                }
+              }),
+        ),
       ),
     );
   }
@@ -134,11 +138,14 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     setState(() {
+      _isLoading = true;
       images = resultList;
       images.forEach((image) async {
         print("images: ${image.name}");
         var bytes = await image.getByteData(quality: 100);
-        if (bytes != null) _uploadFile(await writeToFile(bytes));
+        if (bytes != null) {
+          _uploadFile(await writeToFile(bytes));
+        }
       });
       print("images: ${images.length}");
 //      _error = error;

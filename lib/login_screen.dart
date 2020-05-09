@@ -38,28 +38,40 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("LoginScreen"),
-      ),
-      body: Container(
-        child: Center(
-          child: RaisedButton(
-            child: Text("GOOGLE SIGNIN"),
-            onPressed: () {
-              _handleSignIn().then((FirebaseUser user) {
-                print("user $user");
-                if (user != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(user: _currentUser),
-                    ),
-                  );
-                }
-              }).catchError((e) => print(e));
-            },
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            flex: 1,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Text("CrudTest",style: TextStyle(fontSize: 38),),
+            ),
           ),
-        ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              child: Center(
+                child: RaisedButton(
+                  child: Text("GOOGLE SIGNIN"),
+                  onPressed: () {
+                    _handleSignIn().then((FirebaseUser user) {
+                      print("user $user");
+                      if (user != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                HomeScreen(user: _currentUser),
+                          ),
+                        );
+                      }
+                    }).catchError((e) => print(e));
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
