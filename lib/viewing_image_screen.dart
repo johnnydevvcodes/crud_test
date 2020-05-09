@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crudtest/constants.dart';
+import 'package:crudtest/like.dart';
 import 'package:crudtest/photo.dart';
-import 'package:crudtest/viewing_likes.dart';
 import 'package:flutter/material.dart';
+import 'package:transparent_image/transparent_image.dart';
 
 class ViewingImageScreen extends StatefulWidget {
   final Photo photo;
@@ -19,6 +20,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
   var _labelController = TextEditingController();
 
   bool _isByYou;
+
 
   @override
   void initState() {
@@ -64,6 +66,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
                     child: GestureDetector(
                       onTap: () {
+                        _showLikes();
                       },
                       child: Text(
                         "${widget.photo.likes ?? 0} likes",
@@ -116,7 +119,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
   }
 
   _bottomSheet() {
-    showModalBottomSheet(
+  showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         builder: (BuildContext context) {
@@ -153,6 +156,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                               style: TextStyle(fontSize: 16)))),
                   GestureDetector(
                     onTap: () {
+                      _backHome();
                       _updatePhoto();
                     },
                     child: Card(
@@ -189,10 +193,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                 onPressed: () {
                   //go back to previous page
                   Navigator.pop(context);
-                  Firestore.instance
-                      .document("$KEY_PHOTOS/${widget.photo.docId}")
-                      .delete()
-                      .then((_) {
+                  Firestore.instance.document("$KEY_PHOTOS/${widget.photo.docId}").delete().then((_) {
                     _backHome();
                   });
                   //toast "changes not saved"
@@ -223,6 +224,64 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
             photoUrl: photo.photoUrl,
             postedBy: photo.postedBy,
             likes: photo.likes)
-        .toMap());
+        .toMap()).then((_){
+          _backHome();
+    });
+  }
+
+  void _showLikes() {
+
+
+
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return SingleChildScrollView(
+              child: Container(
+                height: 250,
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: StreamBuilder<QuerySnapshot>(
+                      stream: Firestore.instance.document("$KEY_PHOTOS/${widget.photo.docId}").collection(widget.photo.uid).snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError)
+                          return new Text('Error: ${snapshot.error}');
+                        switch (snapshot.connectionState) {
+                          case ConnectionState.waiting:
+                            return new Text('Loading...');
+                          default:
+                            return
+                              CustomScrollView(
+                                slivers: <Widget>[
+                                  SliverList(
+                                    delegate: SliverChildBuilderDelegate(
+                                            (BuildContext context, int index) {
+                                          print("index : $index");
+                                          var like =
+                                              snapshot.data.documents?.elementAt(index)?.data;
+                                          var likeObj = Like.fromMap(like);
+
+                                          return Padding(
+                                            padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
+                                            child: ListTile(
+                                              leading: FadeInImage.memoryNetwork(
+                                                placeholder: kTransparentImage,
+                                                image: likeObj.photoUrl,
+                                              ),
+                                              title: Text(likeObj.email),
+                                            ),
+                                          );
+                                        }, childCount: snapshot.data.documents?.length),
+                                  ),
+                                ],
+                              );
+                        }
+                      }),
+                ),
+              ));
+        });
   }
 }

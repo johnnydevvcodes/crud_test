@@ -48,7 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text("HomeScreen"),
       ),
       body: Container(
-        child: StreamBuilder<QuerySnapshot>(
+        child:
+        StreamBuilder<QuerySnapshot>(
             stream: Firestore.instance.collection(KEY_PHOTOS).snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError)
@@ -75,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
                             child: PhotoItemView(
-                                photo: photoObj, uid: widget.user.id),
+                                photo: photoObj, user: widget.user),
                           );
                         }, childCount: snapshot.data.documents?.length),
                       ),

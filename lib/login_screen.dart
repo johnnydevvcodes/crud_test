@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       body: Container(
         child: Center(
-          child: FlatButton(
+          child: RaisedButton(
             child: Text("GOOGLE SIGNIN"),
             onPressed: () {
               _handleSignIn().then((FirebaseUser user) {

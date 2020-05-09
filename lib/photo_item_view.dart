@@ -1,16 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crudtest/like.dart';
 import 'package:crudtest/photo.dart';
 import 'package:crudtest/viewing_image_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 import 'constants.dart';
 
 class PhotoItemView extends StatefulWidget {
   final Photo photo;
-  final String uid;
+  final GoogleSignInAccount user;
 
-  const PhotoItemView({Key key, this.photo, this.uid}) : super(key: key);
+  const PhotoItemView({Key key, this.photo, this.user}) : super(key: key);
 
   @override
   _PhotoItemViewState createState() => _PhotoItemViewState();
@@ -21,7 +23,7 @@ class _PhotoItemViewState extends State<PhotoItemView> {
 
   @override
   Widget build(BuildContext context) {
-    _isByYou = widget.uid == widget.photo.uid;
+    _isByYou = widget.user.id == widget.photo.uid;
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -29,7 +31,7 @@ class _PhotoItemViewState extends State<PhotoItemView> {
           MaterialPageRoute(
               builder: (context) => ViewingImageScreen(
                     photo: widget.photo,
-                    uid: widget.uid,
+                    uid: widget.user.id,
                   )),
         );
       },
@@ -95,12 +97,26 @@ class _PhotoItemViewState extends State<PhotoItemView> {
     } else {
       likes = photo.likes + 1;
     }
-    Firestore.instance.document("$KEY_PHOTOS/${photo.docId}").updateData(Photo(
-            uid: photo.uid,
-            photoName: photo.photoName,
-            photoUrl: photo.photoUrl,
-            postedBy: photo.postedBy,
-            likes: likes)
-        .toMap());
+
+    Firestore.instance
+        .document("$KEY_PHOTOS/${photo.docId}")
+        .updateData(Photo(
+                uid: photo.uid,
+                photoName: photo.photoName,
+                photoUrl: photo.photoUrl,
+                postedBy: photo.postedBy,
+                likes: likes)
+            .toMap())
+        .then((_) {
+      //subcollection for likes data
+      Firestore.instance
+          .document("$KEY_PHOTOS/${photo.docId}")
+          .collection(widget.photo.uid)
+          .document()
+          .setData(Like(
+            email: widget.user.email,
+            photoUrl: widget.user.photoUrl,
+          ).toMap());
+    });
   }
 }
