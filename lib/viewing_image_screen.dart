@@ -29,6 +29,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
   List<Asset> images = List<Asset>();
   var storage = serviceLocator.get<StorageService>();
   FirebaseStorage _storageIns;
+  var _imageList = List<String>();
 
   bool _isByYou;
 
@@ -65,15 +66,15 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                     return FullscreenSliderDemo(
                         imgList: [widget.photo.photoUrl]);
                   default:
-                    var imageList = List<String>();
-                    imageList.add(widget.photo.photoUrl);
+                    _imageList = List<String>();
+                    _imageList.add(widget.photo.photoUrl);
                     snapshot.data.documents?.forEach((data) {
                       if (data['subphoto'] != null) {
-                        imageList.add(data['subphoto']);
+                        _imageList.add(data['subphoto']);
                         print("subphotos: ${data['subphoto']}");
                       }
                     });
-                    return FullscreenSliderDemo(imgList: imageList);
+                    return FullscreenSliderDemo(imgList: _imageList);
                 }
               }),
 
@@ -235,7 +236,9 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                       .document("$KEY_PHOTOS/${widget.photo.docId}")
                       .delete()
                       .then((_) {
-                    _backHome();
+                    _deleteFromStorage().then((_){
+                      _backHome();
+                    });
                   });
                   //toast "changes not saved"
                 },
@@ -387,6 +390,17 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
       });
       print("images: ${images.length}");
 //      _error = error;
+    });
+  }
+
+  Future<void> _deleteFromStorage() async {
+    var ref = await FirebaseStorage.instance
+        .getReferenceFromUrl(widget.photo.photoUrl);
+    await ref.delete();
+    _imageList.forEach((image) async {
+      print("image to delete:  ${image}");
+      var ref = await FirebaseStorage.instance.getReferenceFromUrl(image);
+      await ref.delete();
     });
   }
 }
