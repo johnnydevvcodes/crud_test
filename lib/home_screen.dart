@@ -144,12 +144,4 @@ class _HomeScreenState extends State<HomeScreen> {
 //      _error = error;
     });
   }
-
-  Future<File> writeToFile(ByteData data) {
-    final buffer = data.buffer;
-    final String uuid = Uuid().v1();
-    final Directory systemTempDir = Directory.systemTemp;
-    return new File('${systemTempDir.path}/$uuid').writeAsBytes(
-        buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
-  }
 }
