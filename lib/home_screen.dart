@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crudtest/main.dart';
 import 'package:crudtest/photo.dart';
@@ -29,7 +28,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController maxWidthController = TextEditingController();
   final TextEditingController maxHeightController = TextEditingController();
   final TextEditingController qualityController = TextEditingController();
-  List<StorageUploadTask> _tasks = <StorageUploadTask>[];
+  final TextEditingController _searchController = TextEditingController();
+  var _photoSearchResults = List<Photo>();
+  var _photos = List<Photo>();
 
   FirebaseStorage _storageIns;
 
@@ -51,45 +52,85 @@ class _HomeScreenState extends State<HomeScreen> {
       body: LoadingOverlay(
         isLoading: _isLoading,
         color: Colors.transparent,
-        child: Container(
-          child: StreamBuilder<QuerySnapshot>(
-              stream: Firestore.instance.collection(KEY_PHOTOS).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  _isLoading = false;
-                  return new Text('Error: ${snapshot.error}');
-                }
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return new Text('Loading...');
-                  default:
-                    return CustomScrollView(
-                      slivers: <Widget>[
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                                  (BuildContext context, int index) {
-                                print("index : $index");
-                                var photo =
-                                    snapshot.data.documents
-                                        ?.elementAt(index)
-                                        ?.data;
-                                var photoObj = Photo.fromMap(photo);
-                                photoObj.docId = snapshot.data.documents
-                                    ?.elementAt(index)
-                                    ?.documentID;
-                                _isLoading = false;
-                                return Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      2, 4, 2, 0),
-                                  child: PhotoItemView(
-                                      photo: photoObj, user: widget.user),
-                                );
-                              }, childCount: snapshot.data.documents?.length),
-                        ),
-                      ],
-                    );
-                }
-              }),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              flex: 0,
+              child: TextField(
+                decoration: InputDecoration(
+                  alignLabelWithHint: true,
+                  hintText: "Search",
+                ),
+                controller: _searchController,
+                style: TextStyle(fontSize: 16),
+                onChanged: onSearchTextChanged,
+              ),
+            ),
+            Expanded(
+              child: Container(
+                child: _photoSearchResults.length != 0 ||
+                        _searchController.text.isNotEmpty
+                    ? new ListView.builder(
+                        itemCount: _photoSearchResults.length,
+                        itemBuilder: (context, i) {
+                          var photoObj = _photoSearchResults[i];
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
+                            child: PhotoItemView(
+                                photo: photoObj, user: widget.user),
+                          );
+                        },
+                      )
+                    : StreamBuilder<QuerySnapshot>(
+                        stream: Firestore.instance
+                            .collection(KEY_PHOTOS)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            _isLoading = false;
+                            return new Text('Error: ${snapshot.error}');
+                          }
+                          switch (snapshot.connectionState) {
+                            case ConnectionState.waiting:
+                              return new Text('Loading...');
+                            default:
+                              _photos.clear();
+                              return CustomScrollView(
+                                slivers: <Widget>[
+                                  SliverList(
+                                    delegate: SliverChildBuilderDelegate(
+                                        (BuildContext context, int index) {
+                                      print("index : $index");
+                                      var photo = snapshot.data.documents
+                                          ?.elementAt(index)
+                                          ?.data;
+                                      var photoObj = Photo.fromMap(photo);
+                                      photoObj.docId = snapshot.data.documents
+                                          ?.elementAt(index)
+                                          ?.documentID;
+                                      if (!_photos.contains(photoObj)) {
+                                        print("photoobj : ${photoObj.toMap()}");
+
+                                        _photos.add(photoObj);
+                                      }
+                                      _isLoading = false;
+                                      return Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            2, 4, 2, 0),
+                                        child: PhotoItemView(
+                                            photo: photoObj, user: widget.user),
+                                      );
+                                    },
+                                        childCount:
+                                            snapshot.data.documents?.length),
+                                  ),
+                                ],
+                              );
+                          }
+                        }),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -113,12 +154,12 @@ class _HomeScreenState extends State<HomeScreen> {
         print('File Uploaded dl url: $fileURL');
         print('posting by.. email ${widget.user.email}');
         Firestore.instance.collection(KEY_PHOTOS).document().setData(Photo(
-          uid: widget.user.id,
-          photoUrl: fileURL,
-          postedBy: widget.user.email,
-        ).toMap());
+              uid: widget.user.id,
+              photoUrl: fileURL,
+              postedBy: widget.user.email,
+            ).toMap());
       });
-    }).catchError((e){
+    }).catchError((e) {
       print("uploadtask: error: ${e}");
       setState(() {
         _isLoading = false;
@@ -162,5 +203,22 @@ class _HomeScreenState extends State<HomeScreen> {
       print("images: ${images.length}");
 //      _error = error;
     });
+  }
+
+  onSearchTextChanged(String text) async {
+    _photoSearchResults.clear();
+    if (text.isEmpty) {
+      setState(() {});
+      return;
+    }
+    _photos.forEach((photo) {
+      if (photo.photoName != null) {
+        if (photo.photoName.toLowerCase().contains(text.toLowerCase()) ||
+            photo.postedBy.toLowerCase().contains(text.toLowerCase()))
+          _photoSearchResults.add(photo);
+      }
+    });
+
+    setState(() {});
   }
 }

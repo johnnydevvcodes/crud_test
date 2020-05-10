@@ -27,7 +27,7 @@ class Photo {
   static Photo fromMap(Map<String, dynamic> map) {
     return Photo(
       uid: map['uid'],
-      photoName: map['photoName'],
+      photoName: map['photoName'] ?? "Label",
       photoUrl: map['photoUrl'],
       postedBy: map['postedBy'],
       likes: map['likes'],
