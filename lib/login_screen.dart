@@ -26,10 +26,9 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (context) => HomeScreen(user: _currentUser),
           ),
         );
-        toast("hey im in");
+        toast("Signin success!");
       } else {
-        print("hey im null");
-        toast("hey im null");
+        toast("No user signed in.");
       }
     });
     _googleSignIn.signInSilently();

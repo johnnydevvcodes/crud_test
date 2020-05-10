@@ -138,6 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     setState(() {
+      toast("Updating post...");
       _isLoading = true;
       images = resultList;
       images.forEach((image) async {

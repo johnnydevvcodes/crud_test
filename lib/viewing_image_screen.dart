@@ -195,6 +195,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                   GestureDetector(
                     onTap: () {
                       setState(() {
+                        toast("Updating...");
                         _isLoading = true;
                       });
                       Navigator.of(context).pop();
@@ -235,6 +236,11 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                   //go back to previous page
                   setState(() {
                     _isLoading = true;
+                    if (images.length > 1) {
+                      toast("Deleting photos...");
+                    } else {
+                      toast("Deleting photo...");
+                    }
                   });
                   Navigator.pop(context);
                   Firestore.instance
@@ -389,6 +395,11 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
     if (!mounted) return;
 
     setState(() {
+      if (images.length > 1) {
+        toast("Adding photos...");
+      } else {
+        toast("Adding photo...");
+      }
       _isLoading = true;
       images = resultList;
       images.forEach((image) async {
