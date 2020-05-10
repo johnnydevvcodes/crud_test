@@ -67,7 +67,7 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
                       _imageList = List<String>();
                       _imageList.add(widget.photo.photoUrl);
                       snapshot.data.documents?.forEach((data) {
-                        if (data['subphoto'] != null) {
+                        if (data.data['subphoto'] != null) {
                           _imageList.add(data['subphoto']);
                           print("subphotos: ${data['subphoto']}");
                         }

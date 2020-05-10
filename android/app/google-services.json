@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "192987369777",
-    "firebase_url": "https://friendlychat-3e6e7.firebaseio.com",
-    "project_id": "friendlychat-3e6e7",
-    "storage_bucket": "friendlychat-3e6e7.appspot.com"
+    "project_number": "982029422211",
+    "firebase_url": "https://crudtest-49f73.firebaseio.com",
+    "project_id": "crudtest-49f73",
+    "storage_bucket": "crudtest-49f73.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:192987369777:android:eff3267713a04500f0a010",
+        "mobilesdk_app_id": "1:982029422211:android:91587fba88d5af4cd595b6",
         "android_client_info": {
           "package_name": "com.johnraimappsph.crudtest"
         }
       },
       "oauth_client": [
         {
-          "client_id": "192987369777-sq4db434p3gdg0c4legardt9oq5ihk16.apps.googleusercontent.com",
+          "client_id": "982029422211-2pmpru21s03mlkfr6t1io9gdpn618dt4.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.johnraimappsph.crudtest",
@@ -23,24 +23,24 @@
           }
         },
         {
-          "client_id": "192987369777-292rrk3gsm9mu22pi4sqqnfu157194kq.apps.googleusercontent.com",
+          "client_id": "982029422211-00n2702ef7efbb5ksc7gkrhi5bucup6n.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDZT8b3sFIwDzSVTO6Yx7lEL0A3m0fe3rY"
+          "current_key": "AIzaSyBXP0vEazYovd47_dFML3J3SuSyB-Ybev4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "192987369777-292rrk3gsm9mu22pi4sqqnfu157194kq.apps.googleusercontent.com",
+              "client_id": "982029422211-00n2702ef7efbb5ksc7gkrhi5bucup6n.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "192987369777-o8ni3t413tok1hus26itm73fn3mg7282.apps.googleusercontent.com",
+              "client_id": "982029422211-egpkv49qnn91uh06ut3gao3m5ecmujjq.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.johnraimappsph.crudtest"

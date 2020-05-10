@@ -8,18 +8,18 @@ class StorageService {
 
   Future<FirebaseStorage> get storageInstance async {
     final FirebaseApp app = await FirebaseApp.configure(
-      name: 'FriendlyChat',
+      name: 'crudtest',
       options: FirebaseOptions(
         googleAppID: (Platform.isIOS || Platform.isMacOS)
-            ? '1:192987369777:ios:34623f0bc223a85ff0a010'
-            : '1:192987369777:android:eff3267713a04500f0a010',
-        gcmSenderID: '192987369777',
-        apiKey: 'AIzaSyBH2ZQ_gAkh3oyeAD18z_GDqBzq6nN3Ysw',
-        projectID: 'friendlychat-3e6e7',
+            ? '1:982029422211:ios:8a0797fc3830b221d595b6'
+            : '1:982029422211:android:91587fba88d5af4cd595b6',
+        gcmSenderID: '982029422211',
+        apiKey: 'AIzaSyBXP0vEazYovd47_dFML3J3SuSyB-Ybev4',
+        projectID: 'crudtest-49f73',
       ),
     );
     final FirebaseStorage storage = FirebaseStorage(
-        app: app, storageBucket: 'gs://friendlychat-3e6e7.appspot.com');
+        app: app, storageBucket: 'gs://crudtest-49f73.appspot.com');
     print("storage: $storage");
     return storage;
   }
