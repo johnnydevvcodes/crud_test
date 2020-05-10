@@ -371,6 +371,14 @@ class _ViewingImageScreenState extends State<ViewingImageScreen> {
             .document() //auto generated
             .setData({'subphoto': fileURL});
       });
+    }).catchError((e){
+      print("uploadtask: error: ${e}");
+      setState(() {
+        _isLoading = false;
+        if (e.toString().contains("exceeded")) {
+          toast("Cannot upload photos. Cloud storage full.");
+        }
+      });
     });
   }
 

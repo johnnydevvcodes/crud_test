@@ -67,21 +67,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       slivers: <Widget>[
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
-                              (BuildContext context, int index) {
-                            print("index : $index");
-                            var photo =
-                                snapshot.data.documents?.elementAt(index)?.data;
-                            var photoObj = Photo.fromMap(photo);
-                            photoObj.docId = snapshot.data.documents
-                                ?.elementAt(index)
-                                ?.documentID;
-                            _isLoading = false;
-                            return Padding(
-                              padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
-                              child: PhotoItemView(
-                                  photo: photoObj, user: widget.user),
-                            );
-                          }, childCount: snapshot.data.documents?.length),
+                                  (BuildContext context, int index) {
+                                print("index : $index");
+                                var photo =
+                                    snapshot.data.documents
+                                        ?.elementAt(index)
+                                        ?.data;
+                                var photoObj = Photo.fromMap(photo);
+                                photoObj.docId = snapshot.data.documents
+                                    ?.elementAt(index)
+                                    ?.documentID;
+                                _isLoading = false;
+                                return Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      2, 4, 2, 0),
+                                  child: PhotoItemView(
+                                      photo: photoObj, user: widget.user),
+                                );
+                              }, childCount: snapshot.data.documents?.length),
                         ),
                       ],
                     );
@@ -110,10 +113,18 @@ class _HomeScreenState extends State<HomeScreen> {
         print('File Uploaded dl url: $fileURL');
         print('posting by.. email ${widget.user.email}');
         Firestore.instance.collection(KEY_PHOTOS).document().setData(Photo(
-              uid: widget.user.id,
-              photoUrl: fileURL,
-              postedBy: widget.user.email,
-            ).toMap());
+          uid: widget.user.id,
+          photoUrl: fileURL,
+          postedBy: widget.user.email,
+        ).toMap());
+      });
+    }).catchError((e){
+      print("uploadtask: error: ${e}");
+      setState(() {
+        _isLoading = false;
+        if (e.toString().contains("exceeded")) {
+          toast("Cannot upload photos. Cloud storage full.");
+        }
       });
     });
   }
